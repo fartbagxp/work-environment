@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+alias tf='terraform'
+alias o='xdg-open'
+alias open='xdg-open'
