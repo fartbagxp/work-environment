@@ -1,0 +1,13 @@
+Host github.com-fartbagxp
+	HostName github.com
+	User git
+	PreferredAuthentications publickey
+	IdentityFile ~/.ssh/github_rsa
+	IdentitiesOnly yes
+
+Host github.com-usds
+  HostName github.com
+  User git
+  PreferredAuthentications publickey
+  IdentityFile ~/.ssh/github-laptop-usds
+  IdentitiesOnly yes

@@ -1,0 +1,4 @@
+[includeIf "gitdir:~/code/self/"]
+	path = .gitconfig-fartbagxp
+[includeIf "gitdir:~/code/usds/"]
+	path = .gitconfig-usds
