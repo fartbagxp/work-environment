@@ -1,6 +1,7 @@
 [tools]
 act = "latest"
 actionlint = "latest"
+ant = "latest"
 "asdf:boris-ning-usds/asdf-azure-cli" = "latest"
 "asdf:fartbagxp/asdf-trippy" = "latest"
 "asdf:fartbagxp/asdf-oauth2c" = "latest"
