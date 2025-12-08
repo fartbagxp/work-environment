@@ -1,6 +1,6 @@
 # Work Environment
 
-This is a backup of my development environment for both Windows and Linux (Ubuntu).
+This is a backup of my development environment for both Windows and Linux (Fedora).
 
 My work environment has gotten more complicated with multiple git accounts, multiple operating system, and many different application settings.
 
