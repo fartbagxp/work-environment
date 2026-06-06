@@ -1,0 +1,10 @@
+#!/bin/bash
+# Placed in /lib/systemd/system-sleep/ — called by systemd on suspend/resume.
+# Resets the serio1 controller so the TrackPoint is recognized after waking.
+# See: https://github.com/fwupd/firmware-lenovo/issues/388
+
+if [[ "$1" == "post" ]]; then
+    echo -n none > /sys/devices/platform/i8042/serio1/drvctl
+    sleep 1
+    echo -n reconnect > /sys/devices/platform/i8042/serio1/drvctl
+fi
