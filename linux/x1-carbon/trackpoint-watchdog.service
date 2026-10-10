@@ -1,0 +1,11 @@
+[Unit]
+Description=Reset the TrackPoint when it stops responding
+# See trackpoint-watchdog for how the hang is detected.
+
+[Service]
+ExecStart=/usr/local/bin/trackpoint-watchdog
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

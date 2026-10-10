@@ -1,0 +1,48 @@
+#!/bin/bash
+# Installed to /usr/local/bin/ and run as root by trackpoint-watchdog.service.
+# The Elan TrackPoint behind the RMI4 pass-through occasionally stops
+# acknowledging PS/2 commands and the cursor freezes, with nothing in the
+# kernel log. Writing its sensitivity back to itself sends a real command:
+# on a healthy TrackPoint it succeeds, on a hung one it fails with EIO.
+# When that happens, reset serio1 (same as fix-thinkpad-trackpoint.sh).
+#
+# The probe briefly stops the TrackPoint's data stream, and doing that
+# mid-movement splits a packet: the cursor jumps or a phantom click lands.
+# So only probe after INTERVAL seconds without a single TrackPoint event.
+# A TrackPoint in use is evidently fine; a hung one sends no events at all.
+
+INTERVAL=${INTERVAL:-10}
+
+while true; do
+    attrs=(/sys/bus/serio/devices/serio*/sensitivity)
+    attr=${attrs[0]}
+    devs=("${attr%/sensitivity}"/input/input*/event*)
+    dev=${devs[0]}
+    if [[ ! -f "$attr" || ! -d "$dev" ]]; then
+        sleep "$INTERVAL"
+        continue
+    fi
+
+    # Any event within INTERVAL means the TrackPoint works: skip the probe.
+    # Only a timeout (exit 124) counts as silence; any other failure (device
+    # vanished during a reset) just waits and starts over.
+    timeout "$INTERVAL" head -c 1 "/dev/input/${dev##*/}" > /dev/null 2>&1
+    case $? in
+        0) continue ;;
+        124) ;;
+        *) sleep "$INTERVAL"; continue ;;
+    esac
+    [[ -f "$attr" ]] || continue
+
+    value=$(<"$attr") || continue
+    if ! echo "$value" > "$attr" 2>/dev/null; then
+        # The device can vanish mid-probe (resume hook resetting it); only
+        # act if it is still there.
+        [[ -f "$attr" ]] || continue
+        echo "trackpoint-watchdog: $(dirname "$attr") not responding, resetting serio1" > /dev/kmsg
+        echo -n none > /sys/devices/platform/i8042/serio1/drvctl
+        sleep 1
+        echo -n reconnect > /sys/devices/platform/i8042/serio1/drvctl
+        sleep 5
+    fi
+done
