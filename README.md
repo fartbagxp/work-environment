@@ -8,7 +8,7 @@ Before this repository, I would simply back up certain handy scripts on gist.git
 
 ## What you'll find
 
-* Application setting backups (SSH, git configs, bash startup scripts, aliases)
+* Application setting backups (SSH, git configs, bash startup scripts, aliases, gh CLI extras)
 
 * Issues with Linux (wifi card fails after kernel update)
 

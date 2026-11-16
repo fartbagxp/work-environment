@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# List open Dependabot PRs for the active `gh auth` account.
+#   gh dependabot          -> all repos owned by you
+#   gh dependabot <org>    -> repos in <org> you've committed to
+#
+# Avoids GitHub search entirely (`gh search prs`, `gh pr list --author`):
+# search can't see some orgs (e.g. SAML/enterprise policies) and silently
+# returns nothing. Instead, list each repo's open PRs and filter by author.
+set -euo pipefail
+
+me=$(gh api user --jq .login)
+owner=${1:-$me}
+
+if [[ ${owner,,} == "${me,,}" ]]; then
+  gh repo list "$me" --no-archived --limit 1000 --json nameWithOwner --jq '.[].nameWithOwner'
+else
+  # Org-wide repo listing can be huge, so query only repos you've committed to.
+  gh api graphql --paginate -f query='
+    query($endCursor: String) {
+      viewer {
+        repositoriesContributedTo(first: 100, after: $endCursor, includeUserRepositories: true,
+          contributionTypes: [COMMIT]) {
+          pageInfo { hasNextPage endCursor }
+          nodes { nameWithOwner isArchived }
+        }
+      }
+    }' --jq '.data.viewer.repositoriesContributedTo.nodes[] | select(.isArchived | not) | .nameWithOwner' |
+    { grep -i "^${owner}/" || true; }
+fi |
+  xargs -r -P 8 -I{} sh -c '
+    gh pr list -R "$1" --state open --limit 200 --json number,title,createdAt,author \
+      --jq ".[] | select(.author.login == \"app/dependabot\")
+               | \"${1#*/}\t#\(.number)\t\(.createdAt[:10])\t\(.title)\"" ||
+      echo "gh-dependabot: failed to list PRs for $1" >&2
+  ' _ {} |
+  sort -t$'\t' -k1,1 -k2,2Vr |
+  column -t -s $'\t'
